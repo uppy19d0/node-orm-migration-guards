@@ -17,7 +17,6 @@ concurrency:
 jobs:
   deploy:
     name: Build, test, and publish packages
-    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     environment: npm
     timeout-minutes: 15
@@ -34,56 +33,119 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
 
-      - name: 3. Show workspace metadata
+      - name: 3. Show run context
+        env:
+          NPM_TOKEN_CONFIGURED: ${{ secrets.NPM_TOKEN != '' }}
+        run: |
+          echo "::group::GitHub context"
+          echo "Event: $GITHUB_EVENT_NAME"
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Repository private: ${{ github.event.repository.private }}"
+          echo "Ref: $GITHUB_REF"
+          echo "SHA: $GITHUB_SHA"
+          echo "Actor: $GITHUB_ACTOR"
+          echo "Workflow: $GITHUB_WORKFLOW"
+          echo "Run id: $GITHUB_RUN_ID"
+          echo "Run attempt: $GITHUB_RUN_ATTEMPT"
+          echo "Environment: npm"
+          echo "NPM_TOKEN configured: $NPM_TOKEN_CONFIGURED"
+          echo "::endgroup::"
+
+          echo "::group::Runtime context"
+          echo "Node: $(node --version)"
+          echo "npm: $(npm --version)"
+          echo "Working directory: $PWD"
+          echo "Git commit: $(git rev-parse HEAD)"
+          echo "Git branch: $(git branch --show-current || true)"
+          echo "::endgroup::"
+
+          echo "::group::npm config"
+          echo "registry=$(npm config get registry)"
+          echo "userconfig=$(npm config get userconfig)"
+          echo "cache=$(npm config get cache)"
+          echo "::endgroup::"
+
+          if [ "${{ github.event.repository.private }}" = "true" ]; then
+            echo "::error::This publish workflow is configured for public repositories. Make the repository public or remove this guard before publishing."
+            exit 1
+          fi
+
+      - name: 4. Show workspace metadata
         run: node scripts/publish-workspaces.js --check
 
-      - name: 4. Check SemVer policy
+      - name: 5. Check SemVer policy
         run: npm run check:semver
 
-      - name: 5. Check npm versions
+      - name: 6. Check npm versions
         id: npm_versions
         run: node scripts/publish-workspaces.js --check --github-output "$GITHUB_OUTPUT"
 
-      - name: 6. Install clean dependencies
-        if: steps.npm_versions.outputs.unpublished_count != '0'
-        run: npm ci --ignore-scripts
+      - name: 7. Show npm version check outputs
+        run: |
+          echo "Checked packages: ${{ steps.npm_versions.outputs.checked_count }}"
+          echo "Registry: ${{ steps.npm_versions.outputs.registry }}"
+          echo "Unpublished count: ${{ steps.npm_versions.outputs.unpublished_count }}"
+          echo "Unpublished packages: ${{ steps.npm_versions.outputs.unpublished }}"
 
-      - name: 7. Run tests
+      - name: 8. Install clean dependencies
+        if: steps.npm_versions.outputs.unpublished_count != '0'
+        run: |
+          echo "::group::npm ci"
+          npm ci --ignore-scripts
+          echo "::endgroup::"
+
+          echo "::group::Installed workspace dependency tree"
+          npm ls --workspaces --depth=0 || true
+          echo "::endgroup::"
+
+      - name: 9. Run tests
         if: steps.npm_versions.outputs.unpublished_count != '0'
         run: npm test
 
-      - name: 8. Verify npm token
+      - name: 10. Verify npm token
         if: steps.npm_versions.outputs.unpublished_count != '0'
-        run: npm whoami --registry=https://registry.npmjs.org
+        run: |
+          echo "Verifying npm token against https://registry.npmjs.org"
+          npm whoami --registry=https://registry.npmjs.org
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: 9. Preview npm package contents
+      - name: 11. Preview npm package contents
         if: steps.npm_versions.outputs.unpublished_count != '0'
-        run: npm pack --workspaces --dry-run
+        run: |
+          echo "::group::npm pack dry run"
+          npm pack --workspaces --dry-run
+          echo "::endgroup::"
 
-      - name: 10. Publish to npm
+      - name: 12. Publish to npm
         if: steps.npm_versions.outputs.unpublished_count != '0'
         run: node scripts/publish-workspaces.js --publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: 11. Verify published packages
+      - name: 13. Verify published packages
         if: steps.npm_versions.outputs.unpublished_count != '0'
         run: node scripts/publish-workspaces.js --verify
 
-      - name: 12. Write deploy summary
+      - name: 14. Write deploy summary
         if: always()
         run: |
           {
             echo "## npm Deploy Pipeline"
             echo ""
-            echo "Unpublished packages before deploy: \`${{ steps.npm_versions.outputs.unpublished_count }}\`"
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Repository | \`${{ github.repository }}\` |"
+            echo "| Ref | \`${{ github.ref }}\` |"
+            echo "| SHA | \`${{ github.sha }}\` |"
+            echo "| Registry | \`${{ steps.npm_versions.outputs.registry }}\` |"
+            echo "| Checked packages | \`${{ steps.npm_versions.outputs.checked_count }}\` |"
+            echo "| Unpublished packages before deploy | \`${{ steps.npm_versions.outputs.unpublished_count }}\` |"
+            echo "| Pending package names | \`${{ steps.npm_versions.outputs.unpublished }}\` |"
             echo ""
             if [ "${{ steps.npm_versions.outputs.unpublished_count }}" = "0" ]; then
               echo "Result: skipped because all workspace package versions already exist on npm."
             else
-              echo "Result: publish attempted. Check the step status above for the final result."
+              echo "Result: publish attempted. Check steps 10-13 for token, pack, publish, and verification details."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-
