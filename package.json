@@ -1,0 +1,46 @@
+{
+  "name": "node-orm-migration-guards",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Migration safety guards for popular Node.js ORMs and migration tools.",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "check:semver": "node scripts/check-semver.js",
+    "test": "node --test",
+    "pack:all": "npm pack --workspaces --if-present",
+    "publish:check": "node scripts/publish-workspaces.js --check",
+    "publish:npm": "node scripts/publish-workspaces.js --publish",
+    "publish:all": "npm run publish:npm",
+    "clean": "rm -rf node_modules package-lock.json packages/*/*.tgz"
+  },
+  "keywords": [
+    "migration",
+    "database",
+    "orm",
+    "typeorm",
+    "prisma",
+    "sequelize",
+    "knex",
+    "drizzle",
+    "mikro-orm"
+  ],
+  "author": {
+    "name": "Luis Aneuris Tavarez De Jesus",
+    "url": "https://www.ltavarez.me/"
+  },
+  "homepage": "https://www.ltavarez.me/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uppy19d0/node-orm-migration-guards.git"
+  },
+  "bugs": {
+    "url": "https://github.com/uppy19d0/node-orm-migration-guards/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

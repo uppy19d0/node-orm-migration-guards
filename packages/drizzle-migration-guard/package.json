@@ -1,0 +1,66 @@
+{
+  "name": "drizzle-migration-guard",
+  "version": "0.1.0",
+  "description": "Migration safety guard helpers for Drizzle.",
+  "type": "module",
+  "main": "./src/index.cjs",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./src/index.cjs",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node --test ../../test/adapters.test.js",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {
+    "migration-guard-core": "0.1.0"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=0.30"
+  },
+  "peerDependenciesMeta": {
+    "drizzle-orm": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "drizzle",
+    "drizzle-orm",
+    "migration",
+    "database",
+    "guard"
+  ],
+  "author": {
+    "name": "Luis Aneuris Tavarez De Jesus",
+    "url": "https://www.ltavarez.me/"
+  },
+  "homepage": "https://www.ltavarez.me/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uppy19d0/node-orm-migration-guards.git",
+    "directory": "packages/drizzle-migration-guard"
+  },
+  "bugs": {
+    "url": "https://github.com/uppy19d0/node-orm-migration-guards/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

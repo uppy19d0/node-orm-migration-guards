@@ -1,0 +1,66 @@
+{
+  "name": "prisma-migration-guard",
+  "version": "0.1.0",
+  "description": "Migration safety guard helpers for Prisma Migrate.",
+  "type": "module",
+  "main": "./src/index.cjs",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./src/index.cjs",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node --test ../../test/adapters.test.js",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {
+    "migration-guard-core": "0.1.0"
+  },
+  "peerDependencies": {
+    "prisma": ">=4"
+  },
+  "peerDependenciesMeta": {
+    "prisma": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "prisma",
+    "prisma-migrate",
+    "migration",
+    "database",
+    "guard"
+  ],
+  "author": {
+    "name": "Luis Aneuris Tavarez De Jesus",
+    "url": "https://www.ltavarez.me/"
+  },
+  "homepage": "https://www.ltavarez.me/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uppy19d0/node-orm-migration-guards.git",
+    "directory": "packages/prisma-migration-guard"
+  },
+  "bugs": {
+    "url": "https://github.com/uppy19d0/node-orm-migration-guards/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
