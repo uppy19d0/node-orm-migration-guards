@@ -68,7 +68,7 @@ npm run publish:check
 npm run publish:npm
 ```
 
-The local script intentionally does not add npm provenance unless it runs inside GitHub Actions.
+The local script intentionally publishes with `--provenance=false`. Provenance is enabled only inside GitHub Actions, where npm can use GitHub's OIDC identity.
 
 ## Release Deploy
 
@@ -82,4 +82,3 @@ The local script intentionally does not add npm provenance unless it runs inside
 ## Important
 
 Never commit npm tokens to this repository. The workflow reads the token only from the GitHub secret named `NPM_TOKEN`.
-

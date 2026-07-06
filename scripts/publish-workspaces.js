@@ -228,6 +228,8 @@ function publishUnpublished(statuses) {
 
       if (args.has("--provenance") || isGitHubActions) {
         publishArgs.push("--provenance");
+      } else {
+        publishArgs.push("--provenance=false");
       }
 
       console.log(`Publishing ${workspacePackage.name}@${workspacePackage.version}.`);
