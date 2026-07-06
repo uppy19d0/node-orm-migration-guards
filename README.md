@@ -233,6 +233,8 @@ Common options:
 
 Allow and block lists accept either plain object names such as `users` or qualified names such as `users.email`.
 
+Detailed configuration guidance is available in [docs/configuration.md](docs/configuration.md).
+
 ## Core API
 
 ```js
@@ -292,6 +294,20 @@ assertDrizzleMigrationDirectory("drizzle", {
   failOnWarnings: true
 });
 ```
+
+See [docs/ci.md](docs/ci.md) for GitHub Actions examples and custom reporter patterns.
+
+## Documentation
+
+| Guide | Purpose |
+| --- | --- |
+| [Configuration](docs/configuration.md) | Options, allow lists, blocked objects and strict CI profiles |
+| [Rules](docs/rules.md) | Rule behavior, severity and rollout guidance |
+| [Adapters](docs/adapters.md) | ORM-specific usage patterns |
+| [CI Integration](docs/ci.md) | Build pipeline examples |
+| [Troubleshooting](docs/troubleshooting.md) | Common npm, workflow and parser issues |
+| [Contributing](CONTRIBUTING.md) | Development workflow and project conventions |
+| [Changelog](CHANGELOG.md) | Release history |
 
 ## Limitations
 

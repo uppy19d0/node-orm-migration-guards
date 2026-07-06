@@ -1,6 +1,6 @@
 {
   "name": "knex-migration-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Migration safety guard helpers for Knex and Objection.js.",
   "type": "module",
   "main": "./src/index.cjs",
@@ -25,7 +25,7 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
-    "migration-guard-core": "0.1.0"
+    "migration-guard-core": "0.1.1"
   },
   "peerDependencies": {
     "knex": ">=1"
