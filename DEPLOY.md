@@ -29,6 +29,8 @@ The core package is published first because every adapter depends on it.
 
 Creating a GitHub release starts the deploy workflow.
 
+The publish workflow also runs after the `Create GitHub Release` workflow completes successfully on `main`. This avoids relying only on the `release` event, because releases created by GitHub Actions with `GITHUB_TOKEN` do not trigger another workflow run.
+
 The workflow checks every workspace package against npm before publishing:
 
 - If `package@version` already exists on npm, that package is skipped.
