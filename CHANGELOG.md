@@ -7,6 +7,7 @@ This project follows Semantic Versioning. The workspace root and all published p
 ## Unreleased
 
 - Added `node-orm-migration-guard`, a unified package configured with `orm` and `database`.
+- Added adapter subpath exports such as `node-orm-migration-guard/drizzle` and `node-orm-migration-guard/prisma`.
 
 ## 0.1.1
 

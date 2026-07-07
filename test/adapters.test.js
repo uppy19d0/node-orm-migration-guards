@@ -8,6 +8,9 @@ import { MigrationGuardError } from "migration-guard-core";
 import { createGuardedDrizzle } from "drizzle-migration-guard";
 import { createGuardedKnex } from "knex-migration-guard";
 import { createGuardedMikroOrmMigration } from "mikro-orm-migration-guard";
+import { assertSafeMigration as assertCoreSafeMigration } from "node-orm-migration-guard/core";
+import { createMigrationGuard as createDrizzleSubpathGuard } from "node-orm-migration-guard/drizzle";
+import { createMigrationGuard as createObjectionSubpathGuard } from "node-orm-migration-guard/objection";
 import { createMigrationGuard as createUnifiedMigrationGuard, getSupportedOrms } from "node-orm-migration-guard";
 import { guardPrismaMigrationFile } from "prisma-migration-guard";
 import { createGuardedQueryInterface } from "sequelize-migration-guard";
@@ -183,5 +186,31 @@ test("Unified package reports unsupported adapter methods clearly", () => {
   assert.throws(
     () => guard.checkDirectory("migrations"),
     /knex adapter does not support checkDirectory/
+  );
+});
+
+test("Unified package exposes per-adapter subpath guards", () => {
+  const drizzleGuard = createDrizzleSubpathGuard({ database: "pg" });
+  const drizzleResult = drizzleGuard.checkSql("DROP TABLE users;");
+
+  assert.equal(drizzleGuard.orm, "drizzle");
+  assert.equal(drizzleGuard.database, "postgresql");
+  assert.equal(drizzleResult.passed, false);
+  assert.equal(drizzleResult.violations[0].source, "drizzle");
+
+  const objectionGuard = createObjectionSubpathGuard({ database: "sqlite3" });
+
+  assert.equal(objectionGuard.orm, "knex");
+  assert.equal(objectionGuard.database, "sqlite");
+  assert.throws(
+    () => objectionGuard.checkDirectory("migrations"),
+    /knex adapter does not support checkDirectory/
+  );
+});
+
+test("Unified package exposes core subpath helpers", () => {
+  assert.throws(
+    () => assertCoreSafeMigration("DROP TABLE users;"),
+    MigrationGuardError
   );
 });

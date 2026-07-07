@@ -26,6 +26,270 @@ const guard = createMigrationGuard({
 guard.assertDirectory("drizzle");
 ```
 
+## Subpath Imports
+
+Use subpaths when you want the import itself to name the ORM:
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/drizzle";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  failOnWarnings: true
+});
+
+guard.assertDirectory("drizzle");
+```
+
+Available subpaths:
+
+```js
+import { createMigrationGuard as createDrizzleGuard } from "node-orm-migration-guard/drizzle";
+import { createMigrationGuard as createPrismaGuard } from "node-orm-migration-guard/prisma";
+import { createMigrationGuard as createKnexGuard } from "node-orm-migration-guard/knex";
+import { createMigrationGuard as createObjectionGuard } from "node-orm-migration-guard/objection";
+import { createMigrationGuard as createSequelizeGuard } from "node-orm-migration-guard/sequelize";
+import { createMigrationGuard as createTypeOrmGuard } from "node-orm-migration-guard/typeorm";
+import { createMigrationGuard as createMikroOrmGuard } from "node-orm-migration-guard/mikro-orm";
+```
+
+The core engine is also available directly:
+
+```js
+import { assertSafeMigration } from "node-orm-migration-guard/core";
+
+assertSafeMigration("ALTER TABLE users DROP COLUMN legacy_email;");
+```
+
+## Examples
+
+### Drizzle Directory Check
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/drizzle";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  failOnWarnings: true
+});
+
+guard.assertDirectory("drizzle");
+```
+
+### Drizzle Runtime SQL Guard
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/drizzle";
+
+const guard = createMigrationGuard({
+  database: "sqlite"
+});
+
+const guardedDb = guard.wrap(db);
+
+await guardedDb.execute("TRUNCATE TABLE audit_logs");
+```
+
+### Prisma Directory Check
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/prisma";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  failOnWarnings: true,
+  blockedTables: ["payments", "ledger_entries"]
+});
+
+guard.assertDirectory("prisma/migrations");
+```
+
+### Prisma Single Migration File
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/prisma";
+
+const guard = createMigrationGuard({
+  database: "postgres"
+});
+
+const result = guard.checkFile("prisma/migrations/20260707010101_init/migration.sql");
+
+if (!result.passed) {
+  console.error(result.violations);
+  process.exit(1);
+}
+```
+
+### Knex Migration Wrapper
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/knex";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  allowDropColumn: ["users.legacy_email"]
+});
+
+export async function up(knex) {
+  const db = guard.wrap(knex);
+
+  await db.schema.table("users", (table) => {
+    table.dropColumn("legacy_email");
+  });
+}
+```
+
+### Objection.js Alias
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/objection";
+
+const guard = createMigrationGuard({
+  database: "postgres"
+});
+
+export async function up(knex) {
+  const db = guard.wrap(knex);
+
+  await db.raw("ALTER TABLE users DROP COLUMN legacy_email");
+}
+```
+
+### Sequelize QueryInterface Wrapper
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/sequelize";
+
+const guard = createMigrationGuard({
+  database: "mysql",
+  failOnWarnings: true
+});
+
+export async function up(queryInterface) {
+  const guarded = guard.wrap(queryInterface);
+
+  await guarded.removeColumn("users", "legacy_email");
+}
+```
+
+### TypeORM QueryRunner Wrapper
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/typeorm";
+
+const guard = createMigrationGuard({
+  database: "postgres"
+});
+
+export class DropLegacyEmail1710000000000 {
+  async up(queryRunner) {
+    const guarded = guard.wrap(queryRunner);
+
+    await guarded.query("ALTER TABLE users DROP COLUMN legacy_email");
+  }
+}
+```
+
+### TypeORM Migration Instance Wrapper
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/typeorm";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  allowDropColumn: ["users.legacy_email"]
+});
+
+const migration = guard.wrapMigration(new DropLegacyEmail1710000000000());
+
+await migration.up(queryRunner);
+```
+
+### MikroORM Migration Wrapper
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/mikro-orm";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  failOnWarnings: true
+});
+
+const guarded = guard.wrapMigration(migration);
+
+await guarded.up();
+```
+
+### Core SQL Check
+
+```js
+import { checkMigration } from "node-orm-migration-guard/core";
+
+const result = checkMigration("ALTER TABLE users DROP COLUMN legacy_email");
+
+if (!result.passed) {
+  for (const violation of result.violations) {
+    console.error(`${violation.severity}: ${violation.message}`);
+  }
+}
+```
+
+### Custom CI Reporter
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/prisma";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  failOnWarnings: true,
+  blockedTables: ["payments", "audit_logs"],
+  blockedColumns: ["password_hash", "totp_secret"]
+});
+
+const result = guard.checkDirectory("prisma/migrations");
+
+if (!result.passed) {
+  for (const violation of result.violations) {
+    console.error(`${violation.source || "migration"}: ${violation.message}`);
+  }
+
+  process.exit(1);
+}
+```
+
+### Allow Known-Safe Changes
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/drizzle";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  allowDropColumn: ["users.legacy_email"],
+  allowRenameColumn: ["users.full_name"],
+  allowTruncate: ["staging_imports"]
+});
+
+guard.assertDirectory("drizzle");
+```
+
+### Strict Production Profile
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/prisma";
+
+export const migrationGuard = createMigrationGuard({
+  database: "postgres",
+  failOnWarnings: true,
+  blockedTables: ["payments", "ledger_entries", "audit_logs"],
+  blockedColumns: ["password_hash", "totp_secret", "api_key_hash"],
+  severityOverrides: {
+    renameTable: "error",
+    renameColumn: "error"
+  }
+});
+```
+
 ## Runtime Wrappers
 
 ```js

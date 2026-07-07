@@ -12,6 +12,66 @@
       "import": "./src/index.js",
       "require": "./src/index.cjs",
       "default": "./src/index.js"
+    },
+    "./core": {
+      "types": "./src/core.d.ts",
+      "import": "./src/core.js",
+      "require": "./src/core.cjs",
+      "default": "./src/core.js"
+    },
+    "./drizzle": {
+      "types": "./src/drizzle.d.ts",
+      "import": "./src/drizzle.js",
+      "require": "./src/drizzle.cjs",
+      "default": "./src/drizzle.js"
+    },
+    "./knex": {
+      "types": "./src/knex.d.ts",
+      "import": "./src/knex.js",
+      "require": "./src/knex.cjs",
+      "default": "./src/knex.js"
+    },
+    "./objection": {
+      "types": "./src/knex.d.ts",
+      "import": "./src/knex.js",
+      "require": "./src/knex.cjs",
+      "default": "./src/knex.js"
+    },
+    "./mikro": {
+      "types": "./src/mikro-orm.d.ts",
+      "import": "./src/mikro-orm.js",
+      "require": "./src/mikro-orm.cjs",
+      "default": "./src/mikro-orm.js"
+    },
+    "./mikro-orm": {
+      "types": "./src/mikro-orm.d.ts",
+      "import": "./src/mikro-orm.js",
+      "require": "./src/mikro-orm.cjs",
+      "default": "./src/mikro-orm.js"
+    },
+    "./mikroorm": {
+      "types": "./src/mikro-orm.d.ts",
+      "import": "./src/mikro-orm.js",
+      "require": "./src/mikro-orm.cjs",
+      "default": "./src/mikro-orm.js"
+    },
+    "./prisma": {
+      "types": "./src/prisma.d.ts",
+      "import": "./src/prisma.js",
+      "require": "./src/prisma.cjs",
+      "default": "./src/prisma.js"
+    },
+    "./sequelize": {
+      "types": "./src/sequelize.d.ts",
+      "import": "./src/sequelize.js",
+      "require": "./src/sequelize.cjs",
+      "default": "./src/sequelize.js"
+    },
+    "./typeorm": {
+      "types": "./src/typeorm.d.ts",
+      "import": "./src/typeorm.js",
+      "require": "./src/typeorm.cjs",
+      "default": "./src/typeorm.js"
     }
   },
   "files": [

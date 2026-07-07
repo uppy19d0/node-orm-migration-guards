@@ -15,6 +15,16 @@ guard.assertDirectory("drizzle", {
 });
 ```
 
+Use adapter subpaths when the import should choose the ORM:
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/drizzle";
+
+const guard = createMigrationGuard({
+  database: "postgres"
+});
+```
+
 The ORM-specific packages remain available for direct imports. Each adapter exposes two kinds of helpers:
 
 - direct SQL helpers, such as `assertKnexMigrationSql(sql, options)`

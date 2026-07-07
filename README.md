@@ -111,6 +111,21 @@ import { assertSafeMigration } from "node-orm-migration-guard";
 assertSafeMigration("DROP TABLE users;");
 ```
 
+You can also import by ORM subpath:
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard/drizzle";
+
+const guard = createMigrationGuard({
+  database: "postgres",
+  failOnWarnings: true
+});
+
+guard.assertDirectory("drizzle");
+```
+
+Available subpaths include `/drizzle`, `/prisma`, `/knex`, `/objection`, `/sequelize`, `/typeorm`, `/mikro-orm` and `/core`.
+
 ## Adapter Examples
 
 ### TypeORM
