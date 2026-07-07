@@ -1,0 +1,101 @@
+{
+  "name": "node-orm-migration-guard",
+  "version": "0.1.1",
+  "description": "Unified migration safety guard for popular Node.js ORMs and migration tools.",
+  "type": "module",
+  "main": "./src/index.cjs",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./src/index.cjs",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node --test ../../test/adapters.test.js",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {
+    "drizzle-migration-guard": "0.1.1",
+    "knex-migration-guard": "0.1.1",
+    "migration-guard-core": "0.1.1",
+    "mikro-orm-migration-guard": "0.1.1",
+    "prisma-migration-guard": "0.1.1",
+    "sequelize-migration-guard": "0.1.1",
+    "typeorm-migration-guard": "0.1.1"
+  },
+  "peerDependencies": {
+    "@mikro-orm/core": ">=5",
+    "@mikro-orm/migrations": ">=5",
+    "drizzle-orm": ">=0.30",
+    "knex": ">=1",
+    "prisma": ">=4",
+    "sequelize": ">=5",
+    "typeorm": ">=0.2"
+  },
+  "peerDependenciesMeta": {
+    "@mikro-orm/core": {
+      "optional": true
+    },
+    "@mikro-orm/migrations": {
+      "optional": true
+    },
+    "drizzle-orm": {
+      "optional": true
+    },
+    "knex": {
+      "optional": true
+    },
+    "prisma": {
+      "optional": true
+    },
+    "sequelize": {
+      "optional": true
+    },
+    "typeorm": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "migration",
+    "database",
+    "orm",
+    "typeorm",
+    "prisma",
+    "sequelize",
+    "knex",
+    "drizzle",
+    "mikro-orm",
+    "guard"
+  ],
+  "author": {
+    "name": "Luis Aneuris Tavarez De Jesus",
+    "url": "https://www.ltavarez.me/"
+  },
+  "homepage": "https://www.ltavarez.me/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uppy19d0/node-orm-migration-guards.git",
+    "directory": "packages/node-orm-migration-guard"
+  },
+  "bugs": {
+    "url": "https://github.com/uppy19d0/node-orm-migration-guards/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

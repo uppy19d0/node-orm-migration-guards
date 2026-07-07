@@ -2,7 +2,11 @@
 
 ## The package is not visible on npm
 
-Check the exact package name. The workspace root `node-orm-migration-guards` is private and is not published to npm. The published packages are:
+Check the exact package name. The workspace root `node-orm-migration-guards` is private and is not published to npm. The recommended unified package is:
+
+- `node-orm-migration-guard`
+
+The lower-level packages are:
 
 - `migration-guard-core`
 - `typeorm-migration-guard`
@@ -43,4 +47,3 @@ Avoid disabling a full rule unless your team has a separate review process for t
 ## SQL is not detected
 
 The parser focuses on common migration statements. If your ORM generates database-specific SQL that is not parsed, pass structured migration operations directly to `migration-guard-core` or open an issue with a minimal SQL example.
-

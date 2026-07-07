@@ -1,9 +1,11 @@
 # Configuration
 
-Every package in this suite accepts the same `MigrationGuardOptions` from `migration-guard-core`.
+Every package in this suite accepts the same `MigrationGuardOptions` from `migration-guard-core`. The unified package also accepts `orm` and `database` on the top-level configuration object.
 
 ```js
 const options = {
+  orm: "drizzle",
+  database: "postgres",
   failOnWarnings: true,
   allowDropColumn: ["users.legacy_email"],
   blockedTables: ["payments", "audit_logs"],
@@ -96,4 +98,3 @@ interface MigrationGuardResult {
 ```
 
 Use `assertSafeMigration()` when failure should throw, and `checkMigration()` when a build tool or custom reporter needs structured output.
-

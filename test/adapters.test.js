@@ -8,6 +8,7 @@ import { MigrationGuardError } from "migration-guard-core";
 import { createGuardedDrizzle } from "drizzle-migration-guard";
 import { createGuardedKnex } from "knex-migration-guard";
 import { createGuardedMikroOrmMigration } from "mikro-orm-migration-guard";
+import { createMigrationGuard as createUnifiedMigrationGuard, getSupportedOrms } from "node-orm-migration-guard";
 import { guardPrismaMigrationFile } from "prisma-migration-guard";
 import { createGuardedQueryInterface } from "sequelize-migration-guard";
 import { createGuardedQueryRunner } from "typeorm-migration-guard";
@@ -128,5 +129,59 @@ test("MikroORM migration proxy keeps addSql guarded across async lifecycle work"
   await assert.rejects(
     () => guarded.up(),
     MigrationGuardError
+  );
+});
+
+test("Unified package creates configured SQL guards", () => {
+  const guard = createUnifiedMigrationGuard({
+    orm: "prisma-migrate",
+    database: "postgres",
+    failOnWarnings: true
+  });
+
+  const result = guard.checkSql("ALTER TABLE users DROP COLUMN email;");
+
+  assert.equal(guard.orm, "prisma");
+  assert.equal(guard.database, "postgresql");
+  assert.equal(result.passed, false);
+  assert.equal(result.violations[0].source, "prisma");
+});
+
+test("Unified package wraps ORM runtime objects", () => {
+  function knex() {
+    return {};
+  }
+
+  knex.raw = (sql) => ({ sql });
+  knex.schema = {
+    table(tableName, callback) {
+      const tableBuilder = {
+        dropColumn(columnName) {
+          return { tableName, columnName };
+        }
+      };
+      callback(tableBuilder);
+      return { tableName };
+    }
+  };
+
+  const guard = createUnifiedMigrationGuard({ orm: "objection", database: "sqlite3" });
+  const guarded = guard.wrap(knex);
+
+  assert.equal(guard.orm, "knex");
+  assert.equal(guard.database, "sqlite");
+  assert.throws(
+    () => guarded.schema.table("users", (table) => table.dropColumn("email")),
+    MigrationGuardError
+  );
+});
+
+test("Unified package reports unsupported adapter methods clearly", () => {
+  const guard = createUnifiedMigrationGuard({ orm: "knex" });
+
+  assert.deepEqual(getSupportedOrms(), ["drizzle", "knex", "mikro-orm", "prisma", "sequelize", "typeorm"]);
+  assert.throws(
+    () => guard.checkDirectory("migrations"),
+    /knex adapter does not support checkDirectory/
   );
 });

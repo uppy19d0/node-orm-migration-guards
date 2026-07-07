@@ -7,7 +7,7 @@
 
 Migration safety guards for popular Node.js ORMs and migration tools.
 
-`node-orm-migration-guards` helps catch destructive schema changes before they reach a database. The suite provides a shared rule engine plus small adapters for TypeORM, Prisma Migrate, Sequelize, Knex, Drizzle and MikroORM.
+`node-orm-migration-guards` helps catch destructive schema changes before they reach a database. The suite provides a unified package, a shared rule engine and small adapters for TypeORM, Prisma Migrate, Sequelize, Knex, Drizzle and MikroORM.
 
 ## Why Use It
 
@@ -23,10 +23,11 @@ This project makes those operations visible and enforceable. Errors are blocked 
 
 ## Packages
 
-Each package is published independently, so applications only install the adapter they need.
+Use `node-orm-migration-guard` when you want one package and one configuration object. The ORM-specific packages remain available for applications that prefer a smaller direct adapter.
 
 | Package | Use case |
 | --- | --- |
+| [`node-orm-migration-guard`](packages/node-orm-migration-guard) | Unified package configured with `orm` and `database` |
 | [`migration-guard-core`](packages/migration-guard-core) | Shared SQL parser, rule engine and error types |
 | [`typeorm-migration-guard`](packages/typeorm-migration-guard) | TypeORM `QueryRunner` and migration instance wrappers |
 | [`prisma-migration-guard`](packages/prisma-migration-guard) | Prisma `migration.sql` file and directory checks |
@@ -37,7 +38,13 @@ Each package is published independently, so applications only install the adapte
 
 ## Installation
 
-Install the core package when you want to inspect SQL or custom migration operation objects directly:
+Install the unified package for the recommended single-package API:
+
+```sh
+npm install node-orm-migration-guard
+```
+
+Install the core package when you only want to inspect SQL or custom migration operation objects directly:
 
 ```sh
 npm install migration-guard-core
@@ -59,21 +66,32 @@ The ORM packages are peer dependencies and remain optional. The guards do not bu
 ## Quick Start
 
 ```js
-import { assertSafeMigration } from "migration-guard-core";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-assertSafeMigration(`
+const guard = createMigrationGuard({
+  orm: "drizzle",
+  database: "postgres",
+  failOnWarnings: true
+});
+
+guard.assertSql(`
   ALTER TABLE users DROP COLUMN email;
 `);
 ```
 
 The example throws a `MigrationGuardError` before the migration is allowed to continue.
 
-Use `checkMigration()` when you want a structured result instead of an exception:
+Use `checkSql()` when you want a structured result instead of an exception:
 
 ```js
-import { checkMigration } from "migration-guard-core";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-const result = checkMigration(`
+const guard = createMigrationGuard({
+  orm: "prisma",
+  database: "postgres"
+});
+
+const result = guard.checkSql(`
   ALTER TABLE users ADD COLUMN status text NOT NULL;
 `, {
   failOnWarnings: true
@@ -85,6 +103,14 @@ if (!result.passed) {
 }
 ```
 
+The package still exports the direct core helpers:
+
+```js
+import { assertSafeMigration } from "node-orm-migration-guard";
+
+assertSafeMigration("DROP TABLE users;");
+```
+
 ## Adapter Examples
 
 ### TypeORM
@@ -92,11 +118,16 @@ if (!result.passed) {
 Wrap a `QueryRunner` before running SQL:
 
 ```js
-import { createGuardedQueryRunner } from "typeorm-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
+
+const guard = createMigrationGuard({
+  orm: "typeorm",
+  database: "postgres"
+});
 
 export class DropLegacyEmail1710000000000 {
   async up(queryRunner) {
-    const guarded = createGuardedQueryRunner(queryRunner);
+    const guarded = guard.wrap(queryRunner);
 
     await guarded.query("ALTER TABLE users DROP COLUMN email");
   }
@@ -108,9 +139,14 @@ export class DropLegacyEmail1710000000000 {
 Check generated Prisma migration directories before deploy:
 
 ```js
-import { assertPrismaMigrationDirectory } from "prisma-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-assertPrismaMigrationDirectory("prisma/migrations", {
+const guard = createMigrationGuard({
+  orm: "prisma",
+  database: "postgres"
+});
+
+guard.assertDirectory("prisma/migrations", {
   failOnWarnings: true
 });
 ```
@@ -120,10 +156,15 @@ assertPrismaMigrationDirectory("prisma/migrations", {
 Wrap `QueryInterface` in a migration:
 
 ```js
-import { createGuardedQueryInterface } from "sequelize-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
+
+const guard = createMigrationGuard({
+  orm: "sequelize",
+  database: "mysql"
+});
 
 export async function up(queryInterface) {
-  const guarded = createGuardedQueryInterface(queryInterface);
+  const guarded = guard.wrap(queryInterface);
 
   await guarded.removeColumn("users", "email");
 }
@@ -134,10 +175,15 @@ export async function up(queryInterface) {
 Wrap the Knex instance passed to migrations:
 
 ```js
-import { createGuardedKnex } from "knex-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
+
+const guard = createMigrationGuard({
+  orm: "knex",
+  database: "postgres"
+});
 
 export async function up(knex) {
-  const guarded = createGuardedKnex(knex);
+  const guarded = guard.wrap(knex);
 
   await guarded.schema.table("users", (table) => {
     table.dropColumn("email");
@@ -150,9 +196,14 @@ export async function up(knex) {
 Check generated SQL files:
 
 ```js
-import { assertDrizzleMigrationDirectory } from "drizzle-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-assertDrizzleMigrationDirectory("drizzle", {
+const guard = createMigrationGuard({
+  orm: "drizzle",
+  database: "postgres"
+});
+
+guard.assertDirectory("drizzle", {
   failOnWarnings: true
 });
 ```
@@ -160,9 +211,14 @@ assertDrizzleMigrationDirectory("drizzle", {
 Or wrap a Drizzle database object for direct execution checks:
 
 ```js
-import { createGuardedDrizzle } from "drizzle-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-const guardedDb = createGuardedDrizzle(db);
+const guard = createMigrationGuard({
+  orm: "drizzle",
+  database: "sqlite"
+});
+
+const guardedDb = guard.wrap(db);
 
 await guardedDb.execute("TRUNCATE TABLE audit_logs");
 ```
@@ -172,9 +228,14 @@ await guardedDb.execute("TRUNCATE TABLE audit_logs");
 Wrap a migration instance so calls to `addSql()` are checked:
 
 ```js
-import { createGuardedMikroOrmMigration } from "mikro-orm-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-const guarded = createGuardedMikroOrmMigration(migration);
+const guard = createMigrationGuard({
+  orm: "mikro-orm",
+  database: "postgres"
+});
+
+const guarded = guard.wrapMigration(migration);
 
 await guarded.up();
 ```
@@ -277,9 +338,14 @@ assertSafeMigration([
 A typical CI guard can run after migrations are generated and before deploy:
 
 ```js
-import { assertPrismaMigrationDirectory } from "prisma-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-assertPrismaMigrationDirectory("prisma/migrations", {
+const guard = createMigrationGuard({
+  orm: "prisma",
+  database: "postgres"
+});
+
+guard.assertDirectory("prisma/migrations", {
   failOnWarnings: true,
   blockedTables: ["payments", "audit_logs"]
 });
@@ -288,9 +354,14 @@ assertPrismaMigrationDirectory("prisma/migrations", {
 For Drizzle:
 
 ```js
-import { assertDrizzleMigrationDirectory } from "drizzle-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-assertDrizzleMigrationDirectory("drizzle", {
+const guard = createMigrationGuard({
+  orm: "drizzle",
+  database: "postgres"
+});
+
+guard.assertDirectory("drizzle", {
   failOnWarnings: true
 });
 ```
@@ -336,6 +407,7 @@ The npm publish order is dependency-safe:
 
 1. `migration-guard-core`
 2. adapter packages
+3. `node-orm-migration-guard`
 
 ## Security
 

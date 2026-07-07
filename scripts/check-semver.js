@@ -168,6 +168,7 @@ function getWorkspacePackages() {
 const rootPackage = readJson(path.join(rootDirectory, "package.json"));
 const workspacePackages = getWorkspacePackages();
 const corePackage = workspacePackages.find((workspacePackage) => workspacePackage.packageJson.name === "migration-guard-core");
+const unifiedPackageName = "node-orm-migration-guard";
 
 if (!corePackage) {
   console.error("Missing migration-guard-core workspace package.");
@@ -184,6 +185,20 @@ for (const workspacePackage of workspacePackages) {
   if (workspacePackage.packageJson.name !== "migration-guard-core" && coreDependency !== corePackage.packageJson.version) {
     console.error(`${workspacePackage.packageJson.name} must depend on migration-guard-core@${corePackage.packageJson.version}. Current dependency: ${coreDependency || "(missing)"}.`);
     process.exit(1);
+  }
+
+  if (workspacePackage.packageJson.name === unifiedPackageName) {
+    for (const dependencyPackage of workspacePackages) {
+      if (dependencyPackage.packageJson.name === unifiedPackageName) {
+        continue;
+      }
+
+      const dependencyVersion = workspacePackage.packageJson.dependencies?.[dependencyPackage.packageJson.name];
+      if (dependencyVersion !== dependencyPackage.packageJson.version) {
+        console.error(`${unifiedPackageName} must depend on ${dependencyPackage.packageJson.name}@${dependencyPackage.packageJson.version}. Current dependency: ${dependencyVersion || "(missing)"}.`);
+        process.exit(1);
+      }
+    }
   }
 }
 
@@ -231,4 +246,3 @@ for (const workspacePackage of workspacePackages) {
 }
 
 console.log("SemVer guard passed.");
-

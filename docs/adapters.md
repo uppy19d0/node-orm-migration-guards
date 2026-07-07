@@ -1,6 +1,21 @@
 # Adapter Guide
 
-Each adapter exposes two kinds of helpers:
+The recommended package is `node-orm-migration-guard`, which lets applications choose the ORM and database from one configuration object:
+
+```js
+import { createMigrationGuard } from "node-orm-migration-guard";
+
+const guard = createMigrationGuard({
+  orm: "drizzle",
+  database: "postgres"
+});
+
+guard.assertDirectory("drizzle", {
+  failOnWarnings: true
+});
+```
+
+The ORM-specific packages remain available for direct imports. Each adapter exposes two kinds of helpers:
 
 - direct SQL helpers, such as `assertKnexMigrationSql(sql, options)`
 - ORM wrappers, such as `createGuardedKnex(knex, options)`
@@ -95,4 +110,3 @@ import { createGuardedMikroOrmMigration } from "mikro-orm-migration-guard";
 const guarded = createGuardedMikroOrmMigration(migration);
 await guarded.up();
 ```
-

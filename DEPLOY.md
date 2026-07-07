@@ -13,8 +13,9 @@ The publish order is:
 5. `prisma-migration-guard`
 6. `sequelize-migration-guard`
 7. `typeorm-migration-guard`
+8. `node-orm-migration-guard`
 
-The core package is published first because every adapter depends on it.
+The core package is published first because every adapter depends on it. The unified `node-orm-migration-guard` package is published last because it depends on the adapters.
 
 ## One-Time Setup
 
@@ -76,10 +77,11 @@ The local script intentionally publishes with `--provenance=false`. Provenance i
 
 1. Update `version` in the root `package.json` and every workspace `package.json`.
 2. Keep adapter dependencies on `migration-guard-core` aligned with the core version.
-3. Commit and push the change.
-4. Create a Git tag, for example `v0.1.1`.
-5. Push the tag.
-6. Create a GitHub Release from that tag.
+3. Keep `node-orm-migration-guard` dependencies on the core and adapter packages aligned with the workspace version.
+4. Commit and push the change.
+5. Create a Git tag, for example `v0.1.1`.
+6. Push the tag.
+7. Create a GitHub Release from that tag.
 
 ## Important
 

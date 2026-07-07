@@ -30,9 +30,14 @@ jobs:
 ## Prisma Example
 
 ```js
-import { assertPrismaMigrationDirectory } from "prisma-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-assertPrismaMigrationDirectory("prisma/migrations", {
+const guard = createMigrationGuard({
+  orm: "prisma",
+  database: "postgres"
+});
+
+guard.assertDirectory("prisma/migrations", {
   failOnWarnings: true,
   blockedTables: ["payments", "audit_logs"]
 });
@@ -41,9 +46,14 @@ assertPrismaMigrationDirectory("prisma/migrations", {
 ## Drizzle Example
 
 ```js
-import { assertDrizzleMigrationDirectory } from "drizzle-migration-guard";
+import { createMigrationGuard } from "node-orm-migration-guard";
 
-assertDrizzleMigrationDirectory("drizzle", {
+const guard = createMigrationGuard({
+  orm: "drizzle",
+  database: "postgres"
+});
+
+guard.assertDirectory("drizzle", {
   failOnWarnings: true
 });
 ```
@@ -55,7 +65,14 @@ assertDrizzleMigrationDirectory("drizzle", {
 Use `check*` helpers when you want custom formatting:
 
 ```js
-const result = guardPrismaMigrationDirectory("prisma/migrations");
+import { createMigrationGuard } from "node-orm-migration-guard";
+
+const guard = createMigrationGuard({
+  orm: "prisma",
+  database: "postgres"
+});
+
+const result = guard.checkDirectory("prisma/migrations");
 
 if (!result.passed) {
   for (const violation of result.violations) {
@@ -65,4 +82,3 @@ if (!result.passed) {
   process.exit(1);
 }
 ```
-

@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 This project follows Semantic Versioning. The workspace root and all published packages share the same version.
 
+## Unreleased
+
+- Added `node-orm-migration-guard`, a unified package configured with `orm` and `database`.
+
 ## 0.1.1
 
 Documentation and release polish.
@@ -23,4 +27,3 @@ Initial public release.
 - Added SQL parsing for common destructive migration statements.
 - Added default rules for table drops, column drops, truncates, renames and risky `NOT NULL` additions.
 - Added GitHub Actions CI, release and npm publish workflows.
-

@@ -92,6 +92,14 @@ function getWorkspacePackages() {
       return 1;
     }
 
+    if (left.name === "node-orm-migration-guard") {
+      return 1;
+    }
+
+    if (right.name === "node-orm-migration-guard") {
+      return -1;
+    }
+
     return left.name.localeCompare(right.name);
   });
 }
