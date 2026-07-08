@@ -10,7 +10,7 @@ It wraps Knex raw SQL and common schema builder operations before they execute.
 npm install knex-migration-guard
 ```
 
-`knex` is an optional peer dependency. This package does not bundle Knex or Objection.js.
+This package does not bundle Knex or Objection.js. It wraps a Knex instance that your application already provides.
 
 ## Usage
 
@@ -50,4 +50,3 @@ export async function up(knex) {
 ## License
 
 MIT
-

@@ -1,6 +1,6 @@
 {
   "name": "prisma-migration-guard",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Migration safety guard helpers for Prisma Migrate.",
   "type": "module",
   "main": "./src/index.cjs",
@@ -25,15 +25,7 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
-    "migration-guard-core": "0.1.1"
-  },
-  "peerDependencies": {
-    "prisma": ">=4"
-  },
-  "peerDependenciesMeta": {
-    "prisma": {
-      "optional": true
-    }
+    "migration-guard-core": "0.2.0"
   },
   "keywords": [
     "prisma",

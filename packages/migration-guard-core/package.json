@@ -1,6 +1,6 @@
 {
   "name": "migration-guard-core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Shared migration safety rule engine for Node.js ORM migration guards.",
   "type": "module",
   "main": "./src/index.cjs",

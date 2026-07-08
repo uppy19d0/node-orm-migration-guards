@@ -10,7 +10,7 @@ It checks generated Drizzle SQL migration files and can wrap database execution 
 npm install drizzle-migration-guard
 ```
 
-`drizzle-orm` is an optional peer dependency. This package does not bundle Drizzle.
+This package does not bundle Drizzle. It wraps a Drizzle database object that your application already provides.
 
 ## Check Generated Migrations
 
@@ -56,4 +56,3 @@ await guardedDb.execute("TRUNCATE TABLE audit_logs");
 ## License
 
 MIT
-

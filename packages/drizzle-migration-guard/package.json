@@ -1,6 +1,6 @@
 {
   "name": "drizzle-migration-guard",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Migration safety guard helpers for Drizzle.",
   "type": "module",
   "main": "./src/index.cjs",
@@ -25,15 +25,7 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
-    "migration-guard-core": "0.1.1"
-  },
-  "peerDependencies": {
-    "drizzle-orm": ">=0.30"
-  },
-  "peerDependenciesMeta": {
-    "drizzle-orm": {
-      "optional": true
-    }
+    "migration-guard-core": "0.2.0"
   },
   "keywords": [
     "drizzle",

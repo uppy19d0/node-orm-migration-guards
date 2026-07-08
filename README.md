@@ -61,7 +61,7 @@ npm install drizzle-migration-guard
 npm install mikro-orm-migration-guard
 ```
 
-The ORM packages are peer dependencies and remain optional. The guards do not bundle TypeORM, Prisma, Sequelize, Knex, Drizzle or MikroORM.
+The guards do not bundle TypeORM, Prisma, Sequelize, Knex, Drizzle or MikroORM. They wrap objects from the ORM already installed in your application, so the guard packages do not need ORM runtime dependencies.
 
 ## Quick Start
 

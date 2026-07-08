@@ -10,7 +10,7 @@ It wraps Sequelize `QueryInterface` calls and raw SQL execution before they reac
 npm install sequelize-migration-guard
 ```
 
-`sequelize` is an optional peer dependency. This package does not bundle Sequelize.
+This package does not bundle Sequelize. It wraps a Sequelize QueryInterface that your application already provides.
 
 ## Usage
 
@@ -45,4 +45,3 @@ export async function up(queryInterface) {
 ## License
 
 MIT
-

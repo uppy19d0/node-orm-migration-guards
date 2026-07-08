@@ -10,7 +10,7 @@ It wraps MikroORM migration instances and checks calls to `addSql()` before SQL 
 npm install mikro-orm-migration-guard
 ```
 
-`@mikro-orm/core` and `@mikro-orm/migrations` are optional peer dependencies. This package does not bundle MikroORM.
+This package does not bundle MikroORM. It wraps a MikroORM migration instance that your application already provides.
 
 ## Usage
 
@@ -37,4 +37,3 @@ The wrapper guards direct `addSql()` calls and `addSql()` calls made inside sync
 ## License
 
 MIT
-

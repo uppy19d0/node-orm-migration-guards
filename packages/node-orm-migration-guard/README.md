@@ -10,7 +10,7 @@ Use this package when you want one import and one configuration object instead o
 npm install node-orm-migration-guard
 ```
 
-ORM packages such as `drizzle-orm`, `knex`, `prisma`, `sequelize`, `typeorm` and MikroORM remain optional peer dependencies. Install only the ORM you actually use.
+ORM packages such as `drizzle-orm`, `knex`, `prisma`, `sequelize`, `typeorm` and MikroORM are not dependencies of this package. Install only the ORM you actually use in your application.
 
 ## Quick Start
 

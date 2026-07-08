@@ -10,7 +10,7 @@ It wraps TypeORM `QueryRunner` objects and checks raw SQL before it is executed.
 npm install typeorm-migration-guard
 ```
 
-`typeorm` is an optional peer dependency. This package does not bundle TypeORM.
+This package does not bundle TypeORM. It wraps a TypeORM QueryRunner or migration instance that your application already provides.
 
 ## Usage
 
@@ -50,4 +50,3 @@ const guarded = createGuardedQueryRunner(queryRunner, {
 ## License
 
 MIT
-
