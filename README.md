@@ -63,6 +63,14 @@ npm install mikro-orm-migration-guard
 
 The guards do not bundle TypeORM, Prisma, Sequelize, Knex, Drizzle or MikroORM. They wrap objects from the ORM already installed in your application, so the guard packages do not need ORM runtime dependencies.
 
+## Production Readiness
+
+- Publishes focused packages for each ORM plus a unified package for teams that want one API.
+- CI validates workspace metadata, SemVer policy, tests, and npm package contents.
+- Releases support npm provenance from GitHub Actions.
+- Public security, contribution, and code of conduct policies are included in the repository and package tarballs.
+- Runtime packages avoid bundling ORM dependencies, keeping adoption lightweight across existing applications.
+
 ## Quick Start
 
 ```js
