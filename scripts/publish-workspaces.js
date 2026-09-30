@@ -57,7 +57,7 @@ function printRunContext(workspacePackages) {
     console.log(`Node.js: ${process.version}`);
     console.log(`npm: ${getNpmVersion()}`);
     console.log(`GitHub Actions: ${isGitHubActions ? "yes" : "no"}`);
-    console.log(`NODE_AUTH_TOKEN present: ${process.env.NODE_AUTH_TOKEN ? "yes" : "no"}`);
+    console.log(`GitHub OIDC available: ${process.env.ACTIONS_ID_TOKEN_REQUEST_URL ? "yes" : "no"}`);
     console.log(`Workspace packages: ${workspacePackages.length}`);
     console.log("Publish order:");
     workspacePackages.forEach((workspacePackage, index) => {
@@ -213,15 +213,9 @@ function publishUnpublished(statuses) {
     return;
   }
 
-  logGroup("npm authentication check", () => {
-    console.log(`Running npm whoami against ${registry}.`);
-    console.log(`NODE_AUTH_TOKEN present: ${process.env.NODE_AUTH_TOKEN ? "yes" : "no"}`);
-    if (!process.env.NODE_AUTH_TOKEN && isGitHubActions) {
-      console.log("NODE_AUTH_TOKEN is missing in GitHub Actions. Confirm the NPM_TOKEN repository secret exists and the environment allows access to it.");
-    }
-  });
-
-  run("npm", ["whoami", `--registry=${registry}`], { stdio: "inherit" });
+  if (!isGitHubActions || !process.env.ACTIONS_ID_TOKEN_REQUEST_URL) {
+    throw new Error("Publish requires a GitHub Actions OIDC trusted publisher. Run this command from the npm publish workflow.");
+  }
 
   logGroup("npm publish", () => {
     for (const workspacePackage of unpublished) {
@@ -234,11 +228,7 @@ function publishUnpublished(statuses) {
         `--registry=${registry}`
       ];
 
-      if (args.has("--provenance") || isGitHubActions) {
-        publishArgs.push("--provenance");
-      } else {
-        publishArgs.push("--provenance=false");
-      }
+      publishArgs.push("--provenance");
 
       console.log(`Publishing ${workspacePackage.name}@${workspacePackage.version}.`);
       console.log(`Command: ${commandLabel("npm", publishArgs)}`);
