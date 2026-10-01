@@ -1,6 +1,6 @@
 {
   "name": "mikro-orm-migration-guard",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Migration safety guard helpers for MikroORM.",
   "type": "module",
   "main": "./src/index.cjs",
@@ -28,7 +28,7 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
-    "migration-guard-core": "0.2.1"
+    "migration-guard-core": "0.2.2"
   },
   "keywords": [
     "mikro-orm",
