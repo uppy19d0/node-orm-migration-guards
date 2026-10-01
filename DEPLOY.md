@@ -14,6 +14,8 @@ For each package in `packages/*/package.json`, open its npm package settings and
 
 The workflow filename is just `publish.yml`, not its full path. Keep the GitHub `npm` environment configured for this job. Once all eight packages have a trusted publisher and one release succeeds, revoke the old `NPM_TOKEN` in npm and remove the repository secret.
 
+The repository variable `NPM_TRUSTED_PUBLISHING_ENABLED` keeps release and publish jobs disabled until npm setup is complete. After all eight trusted publishers are configured, set this GitHub Actions variable to `true`. Then manually run `Create GitHub Release` on `main` to publish any version prepared while the gate was closed. Leave the variable unset or `false` until all eight mappings are ready.
+
 ## Release
 
 1. Update the root and all workspace versions together. Keep internal dependencies pinned to that version.
