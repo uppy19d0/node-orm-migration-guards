@@ -16,17 +16,13 @@ The lower-level packages are:
 - `drizzle-migration-guard`
 - `mikro-orm-migration-guard`
 
-## GitHub Actions says `NPM_TOKEN` is missing
+## npm says the trusted publisher is not configured
 
-Create an npm automation token and store it as a repository secret named `NPM_TOKEN`.
-
-If the workflow uses an environment named `npm`, confirm that the secret is available to that environment.
+Configure a GitHub Actions trusted publisher for **each** of the eight npm packages. Use owner `uppy19d0`, repository `node-orm-migration-guards`, workflow filename `publish.yml`, and environment `npm`. Allow direct `npm publish`. See [DEPLOY.md](../DEPLOY.md).
 
 ## npm returns `E401 Unauthorized`
 
-The npm token is invalid, expired, revoked or missing publish permission.
-
-Create a new token in npm, update `NPM_TOKEN`, and rerun the workflow.
+Check the trusted publisher fields, that the workflow runs on a GitHub-hosted runner, and that `id-token: write` is present. The workflow deliberately does not use an npm token. If a version was already published, increment the version before retrying.
 
 ## The publish workflow did not run after release creation
 
