@@ -1,6 +1,6 @@
 {
   "name": "node-orm-migration-guard",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Unified migration safety guard for popular Node.js ORMs and migration tools.",
   "type": "module",
   "main": "./src/index.cjs",
@@ -88,13 +88,13 @@
     "prepublishOnly": "npm test"
   },
   "dependencies": {
-    "drizzle-migration-guard": "0.2.1",
-    "knex-migration-guard": "0.2.1",
-    "migration-guard-core": "0.2.1",
-    "mikro-orm-migration-guard": "0.2.1",
-    "prisma-migration-guard": "0.2.1",
-    "sequelize-migration-guard": "0.2.1",
-    "typeorm-migration-guard": "0.2.1"
+    "drizzle-migration-guard": "0.2.2",
+    "knex-migration-guard": "0.2.2",
+    "migration-guard-core": "0.2.2",
+    "mikro-orm-migration-guard": "0.2.2",
+    "prisma-migration-guard": "0.2.2",
+    "sequelize-migration-guard": "0.2.2",
+    "typeorm-migration-guard": "0.2.2"
   },
   "keywords": [
     "migration",
