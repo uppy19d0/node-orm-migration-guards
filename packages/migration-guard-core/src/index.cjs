@@ -1,6 +1,6 @@
 "use strict";
 
-const { scanSql, limit, splitActions } = require("./sql-lexer.cjs");
+const { scanSql, limit, splitActions, splitIdentifier } = require("./sql-lexer.cjs");
 
 const DEFAULT_SEVERITY = Object.freeze({
   unrecognizedOperation: "error",
@@ -35,8 +35,7 @@ function normalizeIdentifier(value) {
     end -= 1;
   }
 
-  return trimmedValue.slice(0, end)
-    .split(".")
+  return splitIdentifier(trimmedValue.slice(0, end))
     .map((part) => {
       const trimmed = part.trim();
       if (
@@ -44,7 +43,12 @@ function normalizeIdentifier(value) {
         (trimmed.startsWith("`") && trimmed.endsWith("`")) ||
         (trimmed.startsWith("[") && trimmed.endsWith("]"))
       ) {
-        return trimmed.slice(1, -1);
+        const closing = trimmed.endsWith("]") ? "]" : trimmed[0];
+        const identifier = trimmed.slice(1, -1).split(closing + closing).join(closing);
+        if (identifier.includes(".") || identifier !== identifier.trim()) {
+          throw new TypeError("Quoted identifiers containing dots or edge whitespace require separate review.");
+        }
+        return identifier;
       }
 
       return trimmed;
@@ -56,8 +60,8 @@ function normalizeComparable(value) {
   return normalizeIdentifier(value).toLowerCase();
 }
 
-function getIdentifierTail(value) {
-  const normalized = normalizeComparable(value);
+function getIdentifierTail(value, caseSensitive = false) {
+  const normalized = caseSensitive ? normalizeIdentifier(value) : normalizeComparable(value);
   const parts = normalized.split(".");
   return parts[parts.length - 1] || normalized;
 }
@@ -68,11 +72,11 @@ function splitSqlStatements(sql, options = {}) {
 
 function compactSql(statement) {
   const items = scanSql(statement);
-  return items.map(item => item.canonical).join("; ").replace(/\s+/g, " ").trim();
+  return items.map(item => item.canonical).join("; ").trim();
 }
 
 function splitCommaList(value, maxOperations) {
-  const parts = String(value).split(",", maxOperations + 1);
+  const parts = splitActions(String(value), maxOperations);
   if (parts.length > maxOperations) throw new RangeError("SQL exceeds maxOperations.");
   return parts
     .map((item) => item.trim())
@@ -89,7 +93,7 @@ function stripTrailingSqlOptions(value) {
 }
 
 function parseSqlStatement(statement, source, options, canonical) {
-  const sql = canonical === undefined ? compactSql(statement) : canonical.replace(/\s+/g, " ").trim();
+  const sql = canonical === undefined ? compactSql(statement) : canonical.trim();
   if (!sql) {
     return [];
   }
@@ -286,32 +290,33 @@ function getRuleSeverity(ruleId, options) {
   return DEFAULT_SEVERITY[ruleId] || "error";
 }
 
-function identifierMatches(value, patterns) {
+function identifierMatches(value, patterns, caseSensitive = false) {
   if (!value || !patterns) {
     return false;
   }
 
-  const normalized = normalizeComparable(value);
-  const tail = getIdentifierTail(value);
+  const normalized = caseSensitive ? normalizeIdentifier(value) : normalizeComparable(value);
+  const tail = getIdentifierTail(value, caseSensitive);
 
   return list(patterns).some((pattern) => {
-    const expected = normalizeComparable(pattern);
+    const expected = caseSensitive ? normalizeIdentifier(pattern) : normalizeComparable(pattern);
     return expected === normalized || expected === tail;
   });
 }
 
-function operationMatchesPattern(operation, pattern) {
+function operationMatchesPattern(operation, pattern, caseSensitive = false) {
   if (!pattern) {
     return false;
   }
 
-  const normalized = normalizeComparable(pattern);
-  const table = operation.table ? normalizeComparable(operation.table) : "";
-  const column = operation.column ? normalizeComparable(operation.column) : "";
+  const comparable = caseSensitive ? normalizeIdentifier : normalizeComparable;
+  const normalized = comparable(pattern);
+  const table = operation.table ? comparable(operation.table) : "";
+  const column = operation.column ? comparable(operation.column) : "";
   const tableColumn = table && column ? `${table}.${column}` : "";
-  const tailTableColumn = table && column ? `${getIdentifierTail(table)}.${getIdentifierTail(column)}` : "";
+  const tailTableColumn = table && column ? `${getIdentifierTail(table, caseSensitive)}.${getIdentifierTail(column, caseSensitive)}` : "";
 
-  return normalized === table || normalized === getIdentifierTail(table) || normalized === column || normalized === getIdentifierTail(column) || normalized === tableColumn || normalized === tailTableColumn;
+  return normalized === table || normalized === getIdentifierTail(table, caseSensitive) || normalized === column || normalized === getIdentifierTail(column, caseSensitive) || normalized === tableColumn || normalized === tailTableColumn;
 }
 
 function isExplicitlyAllowed(value, operation) {
@@ -323,11 +328,11 @@ function isExplicitlyAllowed(value, operation) {
     return false;
   }
 
-  return value.some((pattern) => operationMatchesPattern(operation, pattern));
+  return value.some((pattern) => operationMatchesPattern(operation, pattern, true));
 }
 
 function isIgnoredOperation(operation, options) {
-  return identifierMatches(operation.table, options.ignoreTables) || identifierMatches(operation.column, options.ignoreColumns);
+  return identifierMatches(operation.table, options.ignoreTables, true) || identifierMatches(operation.column, options.ignoreColumns, true);
 }
 
 function analyzeMigrationPlan(input, options = {}) {
