@@ -228,7 +228,7 @@ function publishUnpublished(statuses) {
         `--registry=${registry}`
       ];
 
-      publishArgs.push("--provenance");
+      publishArgs.push("--provenance", "--ignore-scripts");
 
       console.log(`Publishing ${workspacePackage.name}@${workspacePackage.version}.`);
       console.log(`Command: ${commandLabel("npm", publishArgs)}`);
