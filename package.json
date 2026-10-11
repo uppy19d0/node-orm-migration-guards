@@ -1,6 +1,6 @@
 {
   "name": "node-orm-migration-guards",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Migration safety guards for popular Node.js ORMs and migration tools.",
   "type": "module",
@@ -14,7 +14,8 @@
     "publish:check": "node scripts/publish-workspaces.js --check",
     "publish:npm": "node scripts/publish-workspaces.js --publish",
     "publish:all": "npm run publish:npm",
-    "clean": "rm -rf node_modules package-lock.json packages/*/*.tgz"
+    "clean": "rm -rf node_modules package-lock.json packages/*/*.tgz",
+    "benchmark": "node scripts/benchmark.mjs"
   },
   "keywords": [
     "migration",

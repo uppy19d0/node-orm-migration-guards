@@ -439,3 +439,19 @@ Please report suspected vulnerabilities privately. See [SECURITY.md](SECURITY.md
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Security review mode
+
+```js
+import { assertSafeMigration } from 'migration-guard-core';
+
+assertSafeMigration(sql, {
+  allowUnrecognized: false,
+  failOnWarnings: true,
+  maxSqlLength: 1_000_000,
+  maxStatements: 10_000,
+  maxOperations: 10_000,
+});
+```
+
+Apply the same options to adapter constructors. Strict review rejects unsupported statements, including dynamic SQL bodies, instead of interpreting a successful check as permission to execute them. It also rejects safe statements outside the supported subset; use a separately reviewed migration path when necessary. Options and structured plans are trusted migration configuration, never request payloads. Read [the security and performance assessment](docs/security-performance.md) before adopting this mode.

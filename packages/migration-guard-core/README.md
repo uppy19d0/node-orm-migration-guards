@@ -83,3 +83,7 @@ Adapters are available for TypeORM, Prisma Migrate, Sequelize, Knex, Drizzle and
 
 MIT
 
+
+## Bounded strict review (0.4.0)
+
+Use `allowUnrecognized: false` to block raw SQL and unsupported operation types. Default limits are 1,000,000 SQL characters, 10,000 statements and 10,000 operations; positive safe-integer overrides are available. Malformed quotes/comments, executable comments and ambiguous backslash-escaped strings throw before execution. These helpers are migration policy checks, not a query sanitizer or database firewall. See the repository's `docs/security-performance.md` for compatibility and threat-model details.

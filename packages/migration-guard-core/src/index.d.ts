@@ -1,4 +1,5 @@
 export type MigrationRuleId =
+  | "unrecognizedOperation"
   | "dropTable"
   | "dropColumn"
   | "truncateTable"
@@ -37,9 +38,14 @@ export interface MigrationOperation {
 
 export interface ParseSqlMigrationOptions {
   source?: string;
+  maxSqlLength?: number;
+  maxStatements?: number;
+  maxOperations?: number;
 }
 
 export interface MigrationGuardOptions extends ParseSqlMigrationOptions {
+  /** Set false to reject raw SQL and unsupported operation types. */
+  allowUnrecognized?: boolean;
   allowDropTable?: boolean | string[];
   allowDropColumn?: boolean | string[];
   allowTruncate?: boolean | string[];
@@ -81,7 +87,7 @@ export declare class MigrationGuardError extends Error {
   constructor(result: MigrationGuardResult, message?: string);
 }
 
-export declare function splitSqlStatements(sql: string): string[];
+export declare function splitSqlStatements(sql: string, options?: ParseSqlMigrationOptions): string[];
 export declare function parseSqlMigration(sql: string, options?: ParseSqlMigrationOptions): MigrationOperation[];
 export declare function normalizeIdentifier(value: unknown): string;
 export declare function analyzeMigrationPlan(input: string | MigrationOperation[], options?: MigrationGuardOptions): MigrationGuardResult;
