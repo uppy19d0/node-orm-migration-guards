@@ -185,17 +185,18 @@ function writeGitHubOutput(statuses, outputFile) {
 }
 
 function verifyPublished(statuses) {
+  const deadline = Date.now() + 10 * 60 * 1000;
   logGroup("Published package verification", () => {
     for (const workspacePackage of statuses) {
-      for (let attempt = 1; attempt <= 6; attempt += 1) {
-        console.log(`Verify attempt ${attempt}/6 for ${workspacePackage.name}@${workspacePackage.version}`);
+      for (let attempt = 1; ; attempt += 1) {
+        console.log(`Verify attempt ${attempt} for ${workspacePackage.name}@${workspacePackage.version}`);
         if (packageVersionExists(workspacePackage.name, workspacePackage.version)) {
           console.log(`${workspacePackage.name}@${workspacePackage.version} is visible on npm.`);
           break;
         }
 
-        if (attempt === 6) {
-          throw new Error(`${workspacePackage.name}@${workspacePackage.version} was not visible on npm after retries.`);
+        if (Date.now() >= deadline) {
+          throw new Error(`${workspacePackage.name}@${workspacePackage.version} is not publicly visible after the shared 10-minute verification window. Check npm processing or staged approval before retrying publication.`);
         }
 
         console.log(`npm registry has not exposed ${workspacePackage.name}@${workspacePackage.version} yet. Waiting 10s...`);

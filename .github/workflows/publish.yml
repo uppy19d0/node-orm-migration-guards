@@ -162,6 +162,6 @@ jobs:
             if [ "${{ steps.npm_versions.outputs.unpublished_count }}" = "0" ]; then
               echo "Result: skipped because all workspace package versions already exist on npm."
             else
-              echo "Result: publish attempted with GitHub OIDC. Check the pack, publish, and verification steps for details."
+              echo "Result: publication attempted; inspect authentication mode, upload and public registry verification separately."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
