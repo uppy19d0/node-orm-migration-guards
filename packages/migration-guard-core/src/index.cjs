@@ -26,9 +26,13 @@ function normalizeIdentifier(value) {
     return "";
   }
 
-  return String(value)
-    .trim()
-    .replace(/,+$/g, "")
+  const trimmedValue = String(value).trim();
+  let end = trimmedValue.length;
+  while (end > 0 && trimmedValue[end - 1] === ",") {
+    end -= 1;
+  }
+
+  return trimmedValue.slice(0, end)
     .split(".")
     .map((part) => {
       const trimmed = part.trim();
@@ -175,11 +179,12 @@ function splitCommaList(value) {
     .filter(Boolean);
 }
 
+// The SQL prefix and suffix parsers receive whitespace normalized by compactSql.
 function stripTrailingSqlOptions(value) {
   return String(value)
-    .replace(/\s+(cascade|restrict)\s*$/i, "")
-    .replace(/\s+restart\s+identity\s*$/i, "")
-    .replace(/\s+continue\s+identity\s*$/i, "")
+    .replace(/ (cascade|restrict)$/i, "")
+    .replace(/ restart identity$/i, "")
+    .replace(/ continue identity$/i, "")
     .trim();
 }
 
@@ -190,7 +195,7 @@ function parseSqlStatement(statement, source) {
   }
 
   const operations = [];
-  let match = sql.match(/^drop\s+table\s+(?:if\s+exists\s+)?(.+)$/i);
+  let match = sql.match(/^drop table (?:if exists )?(.+)$/i);
   if (match) {
     const tableList = stripTrailingSqlOptions(match[1]);
     for (const table of splitCommaList(tableList)) {
@@ -204,7 +209,7 @@ function parseSqlStatement(statement, source) {
     return operations;
   }
 
-  match = sql.match(/^truncate\s+(?:table\s+)?(.+)$/i);
+  match = sql.match(/^truncate (?:table )?(.+)$/i);
   if (match) {
     const tableList = stripTrailingSqlOptions(match[1]);
     for (const table of splitCommaList(tableList)) {
