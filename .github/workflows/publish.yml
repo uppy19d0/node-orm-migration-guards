@@ -13,7 +13,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: npm-publish-${{ github.ref }}
@@ -24,36 +23,43 @@ jobs:
     name: Build, test, and publish packages
     if: ${{ vars.NPM_TRUSTED_PUBLISHING_ENABLED == 'true' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository)) }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     environment: npm
     timeout-minutes: 15
     steps:
       - name: 1. Checkout source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
+          persist-credentials: false
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
       - name: 2. Set up Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
-          node-version: 24
+          node-version: '24.21.0'
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
 
-      - name: Use an OIDC-capable npm client
-        run: npm install --global npm@11.17.0
 
       - name: 3. Show run context
         env:
+          UPSTREAM_WORKFLOW: ${{ github.event.workflow_run.name || '' }}
+          UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
+          UPSTREAM_BRANCH: ${{ github.event.workflow_run.head_branch || '' }}
+          UPSTREAM_SHA: ${{ github.event.workflow_run.head_sha || '' }}
+          REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
         run: |
           echo "::group::GitHub context"
           echo "Event: $GITHUB_EVENT_NAME"
-          echo "Upstream workflow: ${{ github.event.workflow_run.name || '' }}"
-          echo "Upstream conclusion: ${{ github.event.workflow_run.conclusion || '' }}"
-          echo "Upstream branch: ${{ github.event.workflow_run.head_branch || '' }}"
-          echo "Upstream SHA: ${{ github.event.workflow_run.head_sha || '' }}"
+          echo "Upstream workflow: ${UPSTREAM_WORKFLOW}"
+          echo "Upstream conclusion: ${UPSTREAM_CONCLUSION}"
+          echo "Upstream branch: ${UPSTREAM_BRANCH}"
+          echo "Upstream SHA: ${UPSTREAM_SHA}"
           echo "Repository: $GITHUB_REPOSITORY"
-          echo "Repository private: ${{ github.event.repository.private }}"
+          echo "Repository private: ${REPOSITORY_PRIVATE}"
           echo "Ref: $GITHUB_REF"
           echo "SHA: $GITHUB_SHA"
           echo "Actor: $GITHUB_ACTOR"
@@ -77,7 +83,7 @@ jobs:
           echo "cache=$(npm config get cache)"
           echo "::endgroup::"
 
-          if [ "${{ github.event.repository.private }}" = "true" ]; then
+          if [ "${REPOSITORY_PRIVATE}" = "true" ]; then
             echo "::error::This publish workflow is configured for public repositories. Make the repository public or remove this guard before publishing."
             exit 1
           fi
