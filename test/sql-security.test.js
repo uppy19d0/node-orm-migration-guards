@@ -57,3 +57,26 @@ test('structured operations require own type, targets and correctly typed metada
   for (const input of [Object.create({ type: 'dropTable', table: 'users' }), { type: 'dropTable' }, { type: 'dropColumn', table: 42, column: 'email' }, { type: 'addColumn', table: 'users', column: 'x', nullable: 'false' }])
     assert.throws(() => checkMigration([input]), TypeError);
 });
+
+test('quoted whitespace and comma-bearing identifiers retain exact policy identity', () => {
+  const sql = 'DROP TABLE "user  data", "audit,logs"';
+  assert.deepEqual(parseSqlMigration(sql).map(op => op.table), ['user  data', 'audit,logs']);
+  assert.equal(checkMigration('DROP TABLE "user  data"', { allowDropTable: ['user data'] }).passed, false);
+  assert.equal(checkMigration('DROP TABLE "audit,logs"', { allowDropTable: true, blockedTables: ['audit,logs'] }).passed, false);
+  assert.equal(checkMigration('DROP TABLE "user  data"', { allowDropTable: ['user  data'] }).passed, true);
+});
+
+test('escaped identifier delimiters are decoded for blocked-name matching', () => {
+  assert.equal(checkMigration('DROP TABLE "user""data"', { allowDropTable: true, blockedTables: ['user"data'] }).passed, false);
+  assert.equal(parseSqlMigration('DROP TABLE users$archive')[0].table, 'users$archive');
+});
+
+test('ambiguous quoted dot and edge-space identities are rejected', () => {
+  for (const sql of ['DROP TABLE "a.b"', 'DROP TABLE " users "']) assert.throws(() => checkMigration(sql), TypeError);
+});
+
+test('allowlists and ignore lists cannot authorize differently cased quoted targets', () => {
+  assert.equal(checkMigration('DROP TABLE "USERS"', { allowDropTable: ['users'] }).passed, false);
+  assert.equal(checkMigration('DROP TABLE "USERS"', { ignoreTables: ['users'] }).passed, false);
+  assert.equal(checkMigration('DROP TABLE "USERS"', { allowDropTable: ['USERS'] }).passed, true);
+});

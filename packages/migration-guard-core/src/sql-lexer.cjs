@@ -16,6 +16,9 @@ function scanSql(sql, options = {}) {
   let start = 0;
   let pieces = [];
   let index = 0;
+  function append(value) {
+    if (value !== " " || pieces[pieces.length - 1] !== " ") pieces.push(value);
+  }
   function flush(end) {
     const canonical = pieces.join("").trim();
     if (canonical) {
@@ -31,7 +34,7 @@ function scanSql(sql, options = {}) {
     if (char === "-" && next === "-") {
       index += 2;
       while (index < sql.length && sql[index] !== "\n" && sql[index] !== "\r") index += 1;
-      pieces.push(" ");
+      append(" ");
       continue;
     }
     if (char === "/" && next === "*") {
@@ -46,7 +49,7 @@ function scanSql(sql, options = {}) {
         else index += 1;
       }
       if (depth) throw new TypeError("Unterminated SQL comment.");
-      pieces.push(" ");
+      append(" ");
       continue;
     }
     if (char === "'" || char === '"' || char === "`" || char === "[") {
@@ -64,10 +67,10 @@ function scanSql(sql, options = {}) {
         index += 1;
       }
       if (!closed) throw new TypeError("Unterminated SQL quote.");
-      pieces.push(char === "'" ? "''" : sql.slice(quoteStart, index));
+      append(char === "'" ? "''" : sql.slice(quoteStart, index));
       continue;
     }
-    if (char === "$") {
+    if (char === "$" && !/[A-Za-z0-9_$]/.test(sql[index - 1] ?? "")) {
       let end = index + 1;
       if (sql[end] !== "$" && /[A-Za-z_]/.test(sql[end] ?? "")) {
         while (end < sql.length && /[A-Za-z0-9_]/.test(sql[end])) end += 1;
@@ -76,18 +79,18 @@ function scanSql(sql, options = {}) {
         const tag = sql.slice(index, end + 1);
         const closing = sql.indexOf(tag, end + 1);
         if (closing === -1) throw new TypeError("Unterminated dollar-quoted SQL string.");
-        pieces.push("''"); index = closing + tag.length; continue;
+        append("''"); index = closing + tag.length; continue;
       }
     }
     if (char === ";") { flush(index); index += 1; continue; }
-    pieces.push(char);
+    append(/\s/.test(char) ? " " : char);
     index += 1;
   }
   flush(sql.length);
   return statements;
 }
 
-function splitActions(value) {
+function splitActions(value, maxParts = 10_000) {
   const parts = [];
   let start = 0;
   let depth = 0;
@@ -105,7 +108,10 @@ function splitActions(value) {
     else if (char === "[") quote = "]";
     else if (char === "(") depth += 1;
     else if (char === ")") depth -= 1;
-    else if (char === "," && depth === 0) { parts.push(value.slice(start, index).trim()); start = index + 1; }
+    else if (char === "," && depth === 0) {
+      if (parts.length >= maxParts - 1) throw new RangeError("SQL exceeds maxOperations.");
+      parts.push(value.slice(start, index).trim()); start = index + 1;
+    }
     if (depth < 0) throw new TypeError("Unbalanced SQL parentheses.");
   }
   if (depth || quote) throw new TypeError("Unbalanced SQL action.");
@@ -113,4 +119,26 @@ function splitActions(value) {
   return parts;
 }
 
-module.exports = { scanSql, limit, splitActions };
+function splitIdentifier(value) {
+  const parts = [];
+  let start = 0;
+  let quote;
+  let atStart = true;
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    if (quote) {
+      if (char === quote) {
+        if (value[index + 1] === quote) index += 1;
+        else quote = undefined;
+      }
+    } else if (atStart && (char === '"' || char === "`" || char === "[")) {
+      quote = char === "[" ? "]" : char;
+      atStart = false;
+    } else if (char === ".") { parts.push(value.slice(start, index)); start = index + 1; atStart = true; }
+    else if (!/\s/.test(char)) atStart = false;
+  }
+  parts.push(value.slice(start));
+  return parts;
+}
+
+module.exports = { scanSql, limit, splitActions, splitIdentifier };

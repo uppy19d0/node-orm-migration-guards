@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+- Preserve whitespace and escaped delimiters in quoted identifiers when evaluating policies.
+- Parse comma-bearing quoted table names without splitting them into other targets.
+- Require case-exact allowlists and ignore lists; blocked-name matching remains conservative.
+- Reject quoted dot/edge-space names that cannot be represented unambiguously by this API.
+- Compatibility: review allowlists, ignores and unusual quoted identifiers when upgrading from 0.4.x.
+
+
 ## 0.4.0
 
 - Add bounded SQL lexing, nested-comment handling and dollar-quoted statement boundaries.
