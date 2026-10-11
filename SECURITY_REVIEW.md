@@ -8,7 +8,7 @@ Workflow hardening disables persisted checkout credentials, pins formerly floati
 
 ## Validation evidence
 
-- 17 existing and regression Node tests passed. TypeScript and build checks passed where applicable.
+- 20 existing and regression Node tests passed. TypeScript and build checks passed where applicable.
 - npm audit of the locked dependency graph: zero known vulnerabilities on this assessment date.
 - Semgrep: zero findings and zero scan errors in a combined scan of 415 files across the seven reviewed repositories, using `p/security-audit` and `p/javascript` with Community Edition 1.180.0.
 - npm package dry runs reviewed for accidental environment files, npm credentials, private keys, git directories, node_modules and tarballs.
@@ -21,3 +21,10 @@ The maintainer profile is [luisaneuris60 on Socket](https://socket.dev/npm/user/
 [Socket documents](https://docs.socket.dev/docs/package-scores) that alerts, downloads, dependency counts and maintenance/popularity signals contribute to scores. A low score is not itself a vulnerability diagnosis. Filesystem access in a project-writing CLI or subprocess access in the Rust OOM collector serves the documented product function and must be evaluated in context.
 
 Repository changes do not retroactively modify immutable npm versions. The corrected version must be published through the configured trusted-publisher workflow and analyzed by Socket before claiming a package-score improvement. Check the npm owner's trusted publisher configuration; workflow source alone does not configure npm. Zero audit or SAST findings does not prove the absence of vulnerabilities. No downloads, reviews, maintenance history or scores are fabricated, and alerts are not suppressed to obtain 100%.
+
+
+## Core parsing follow-up
+
+The first completed main-branch CodeQL analysis reported six `js/polynomial-redos` findings in the core identifier and SQL patterns. Identifier cleanup now removes trailing commas with a bounded reverse scan. DROP/TRUNCATE prefixes and trailing option patterns use single literal spaces after the existing whitespace normalization, removing ambiguous repeated whitespace. Destructive operation detection and supported option handling are preserved.
+
+Three additional tests verify identifier behavior, mixed-whitespace SQL semantics, and 200,000-character adversarial input in a child process with an enforced deadline. The suite now has 20 tests. The suite is prepared as 0.3.0 because the existing conservative SemVer guard requires a minor bump whenever runtime entry files change, even for implementation corrections. The exposed API is unchanged; consumers using `^0.2` will need an explicit upgrade to this release. No scanner alert is suppressed.
