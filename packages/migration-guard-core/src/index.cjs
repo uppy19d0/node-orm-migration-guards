@@ -1,6 +1,9 @@
 "use strict";
 
+const { scanSql, limit, splitActions } = require("./sql-lexer.cjs");
+
 const DEFAULT_SEVERITY = Object.freeze({
+  unrecognizedOperation: "error",
   dropTable: "error",
   dropColumn: "error",
   truncateTable: "error",
@@ -59,122 +62,19 @@ function getIdentifierTail(value) {
   return parts[parts.length - 1] || normalized;
 }
 
-function splitSqlStatements(sql) {
-  if (typeof sql !== "string") {
-    throw new TypeError("Expected SQL to be a string.");
-  }
-
-  const statements = [];
-  let current = "";
-  let quote = null;
-  let lineComment = false;
-  let blockComment = false;
-
-  for (let index = 0; index < sql.length; index += 1) {
-    const char = sql[index];
-    const next = sql[index + 1];
-
-    if (lineComment) {
-      current += char;
-      if (char === "\n") {
-        lineComment = false;
-      }
-      continue;
-    }
-
-    if (blockComment) {
-      current += char;
-      if (char === "*" && next === "/") {
-        current += next;
-        index += 1;
-        blockComment = false;
-      }
-      continue;
-    }
-
-    if (quote) {
-      current += char;
-      if (char === quote) {
-        if (next === quote && (quote === "'" || quote === "\"")) {
-          current += next;
-          index += 1;
-        } else {
-          quote = null;
-        }
-      }
-      continue;
-    }
-
-    if (char === "-" && next === "-") {
-      current += char + next;
-      index += 1;
-      lineComment = true;
-      continue;
-    }
-
-    if (char === "/" && next === "*") {
-      current += char + next;
-      index += 1;
-      blockComment = true;
-      continue;
-    }
-
-    if (char === "'" || char === "\"" || char === "`") {
-      current += char;
-      quote = char;
-      continue;
-    }
-
-    if (char === ";") {
-      const statement = current.trim();
-      if (statement) {
-        statements.push(statement);
-      }
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  const last = current.trim();
-  if (last) {
-    statements.push(last);
-  }
-
-  return statements;
-}
-
-function stripLeadingSqlComments(statement) {
-  let value = String(statement).trim();
-
-  while (value.startsWith("--") || value.startsWith("/*")) {
-    if (value.startsWith("--")) {
-      const nextLine = value.indexOf("\n");
-      if (nextLine === -1) {
-        return "";
-      }
-      value = value.slice(nextLine + 1).trim();
-      continue;
-    }
-
-    const commentEnd = value.indexOf("*/");
-    if (commentEnd === -1) {
-      return "";
-    }
-    value = value.slice(commentEnd + 2).trim();
-  }
-
-  return value;
+function splitSqlStatements(sql, options = {}) {
+  return scanSql(sql, options).map(statement => statement.raw);
 }
 
 function compactSql(statement) {
-  return stripLeadingSqlComments(statement).replace(/\s+/g, " ").trim();
+  const items = scanSql(statement);
+  return items.map(item => item.canonical).join("; ").replace(/\s+/g, " ").trim();
 }
 
-function splitCommaList(value) {
-  return String(value)
-    .split(",")
+function splitCommaList(value, maxOperations) {
+  const parts = String(value).split(",", maxOperations + 1);
+  if (parts.length > maxOperations) throw new RangeError("SQL exceeds maxOperations.");
+  return parts
     .map((item) => item.trim())
     .filter(Boolean);
 }
@@ -188,8 +88,8 @@ function stripTrailingSqlOptions(value) {
     .trim();
 }
 
-function parseSqlStatement(statement, source) {
-  const sql = compactSql(statement);
+function parseSqlStatement(statement, source, options, canonical) {
+  const sql = canonical === undefined ? compactSql(statement) : canonical.replace(/\s+/g, " ").trim();
   if (!sql) {
     return [];
   }
@@ -198,7 +98,7 @@ function parseSqlStatement(statement, source) {
   let match = sql.match(/^drop table (?:if exists )?(.+)$/i);
   if (match) {
     const tableList = stripTrailingSqlOptions(match[1]);
-    for (const table of splitCommaList(tableList)) {
+    for (const table of splitCommaList(tableList, limit(options.maxOperations, 10_000, "maxOperations"))) {
       operations.push({
         type: "dropTable",
         table: normalizeIdentifier(table),
@@ -212,7 +112,7 @@ function parseSqlStatement(statement, source) {
   match = sql.match(/^truncate (?:table )?(.+)$/i);
   if (match) {
     const tableList = stripTrailingSqlOptions(match[1]);
-    for (const table of splitCommaList(tableList)) {
+    for (const table of splitCommaList(tableList, limit(options.maxOperations, 10_000, "maxOperations"))) {
       operations.push({
         type: "truncateTable",
         table: normalizeIdentifier(table),
@@ -227,6 +127,12 @@ function parseSqlStatement(statement, source) {
   if (alterTable) {
     const table = normalizeIdentifier(alterTable[1]);
     const action = alterTable[2];
+    const actions = splitActions(action);
+    if (actions.length > limit(options.maxOperations, 10_000, "maxOperations")) throw new RangeError("SQL exceeds maxOperations.");
+    if (actions.length > 1) {
+      return actions.flatMap(item => parseSqlStatement(`ALTER TABLE ${alterTable[1]} ${item}`, source, options))
+        .map(operation => ({ ...operation, rawSql: statement }));
+    }
 
     match = action.match(new RegExp(`^drop\\s+column\\s+(?:if\\s+exists\\s+)?(${IDENTIFIER_PATTERN})`, "i"));
     if (match) {
@@ -289,15 +195,36 @@ function parseSqlStatement(statement, source) {
 }
 
 function parseSqlMigration(sql, options = {}) {
-  return splitSqlStatements(sql).flatMap((statement) => parseSqlStatement(statement, options.source || "sql"));
+  const maxOperations = limit(options.maxOperations, 10_000, "maxOperations");
+  const operations = [];
+  for (const statement of scanSql(sql, options)) {
+    const parsed = parseSqlStatement(statement.raw, options.source || "sql", options, statement.canonical);
+    if (operations.length + parsed.length > maxOperations) throw new RangeError("SQL exceeds maxOperations.");
+    operations.push(...parsed);
+  }
+  return operations;
 }
 
 function normalizeOperation(operation) {
-  if (!operation || typeof operation !== "object") {
+  if (!operation || typeof operation !== "object" || Array.isArray(operation)) {
     throw new TypeError("Migration operations must be objects.");
   }
 
-  const type = operation.type || operation.kind;
+  const type = Object.hasOwn(operation, "type") ? operation.type : Object.hasOwn(operation, "kind") ? operation.kind : undefined;
+  for (const field of ["table", "column", "toTable", "toColumn", "rawSql", "source"]) {
+    if (Object.hasOwn(operation, field) && operation[field] != null && typeof operation[field] !== "string") {
+      throw new TypeError(`Operation ${field} must be a string.`);
+    }
+  }
+  for (const field of ["nullable", "hasDefault"]) {
+    if (Object.hasOwn(operation, field) && typeof operation[field] !== "boolean") throw new TypeError(`Operation ${field} must be boolean.`);
+  }
+  const required = { dropTable: ["table"], truncateTable: ["table"], renameTable: ["table", "toTable"], dropColumn: ["table", "column"], renameColumn: ["table", "column", "toColumn"], addColumn: ["table", "column"] };
+  if (Object.hasOwn(required, type)) {
+    for (const field of required[type]) {
+      if (!Object.hasOwn(operation, field) || typeof operation[field] !== "string" || !operation[field].trim()) throw new TypeError(`Operation ${type} requires ${field}.`);
+    }
+  }
   if (!type || typeof type !== "string") {
     throw new TypeError("Migration operations must include a string type.");
   }
@@ -321,6 +248,7 @@ function toOperationList(input, options) {
     throw new TypeError("Expected SQL string or an array of migration operations.");
   }
 
+  if (input.length > limit(options.maxOperations, 10_000, "maxOperations")) throw new RangeError("Plan exceeds maxOperations.");
   return input.map(normalizeOperation);
 }
 
@@ -423,7 +351,12 @@ function analyzeMigrationPlan(input, options = {}) {
     });
   }
 
+  const recognizedTypes = new Set(["dropTable", "dropColumn", "truncateTable", "renameTable", "renameColumn", "addColumn"]);
   for (const operation of operations) {
+    if (options.allowUnrecognized === false && !recognizedTypes.has(operation.type)) {
+      addViolation("unrecognizedOperation", operation, "Operation is outside the supported migration grammar and requires explicit review.");
+      continue;
+    }
     if (isIgnoredOperation(operation, options)) {
       continue;
     }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Add bounded SQL lexing, nested-comment handling and dollar-quoted statement boundaries.
+- Inspect all top-level ALTER TABLE actions and reject malformed or executable-comment syntax.
+- Add explicit strict review through allowUnrecognized: false and validate structured operations.
+- Add resource limits, security regression tests and a reproducible local parser benchmark.
+- Compatibility: malformed SQL and incorrectly typed operations now throw; review unsupported syntax before upgrading.
+
+
 All notable changes to this project are documented here.
 
 This project follows Semantic Versioning. The workspace root and all published packages share the same version.
