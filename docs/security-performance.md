@@ -25,6 +25,8 @@ Malformed SQL and wrongly typed structured operations now throw. Catching and ig
 
 Run `npm run benchmark` on the deployment runtime and retain the JSON output alongside the commit and workload. It measures local parsing only. The lexer scans bounded input without executing SQL, downloading data or compiling attacker-supplied regular expressions. Existing child-process deadline tests can terminate synchronous parsing regressions. New cases cover mixed ALTER actions, literals, nested comments, malformed inputs and configured limits.
 
+A local Node 24.13.1 run averaged 10.14 microseconds per 61-character mixed-action migration (10,000 iterations) and 502.66 microseconds per 200,020-character comment fixture (100 iterations). These are illustrative machine-specific measurements, not comparative claims against another library or production guarantees.
+
 For runtime performance, measure p95/p99 query latency, connection-pool waits, rows read, query counts and database execution plans. Address N+1 queries, bounded pagination, appropriate indexes and transaction duration in the application. Those improvements cannot be inferred from this parser benchmark. Database timeouts must be configured through the database or ORM; an application Promise timeout does not necessarily cancel a running query.
 
 ## Proposed separate runtime package
