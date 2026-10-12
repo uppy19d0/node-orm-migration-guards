@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1
+
+- Document package runtime permissions, supply-chain verification and scanner limitations.
+- Gate CI/publication on reviewed artifact contents and add regression checks for packaging risks.
+- Keep reviewed dependency update automation and preserve existing runtime APIs.
+
+
 ## 0.5.0
 
 - Preserve whitespace and escaped delimiters in quoted identifiers when evaluating policies.
